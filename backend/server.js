@@ -5,22 +5,24 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
 app.use(cors({ 
   origin: ['http://localhost:3000', 'http://localhost:3001'] 
 }));
 app.use(express.json());
 
-// Test route
 app.get('/', (req, res) => {
   res.json({ message: 'HabitForge API Running! 🚀' });
 });
 
 // Routes
-app.use('/api/habits', require('./routes/habit'));
-app.use('/api/auth', require('./routes/auth'));
+const habitRoutes = require('./routes/habit');
+const authRoutes = require('./routes/auth');
 
-// Connect to MongoDB
+app.use('/api/habits', habitRoutes);
+app.use('/api/auth', authRoutes);
+
+console.log('✅ All routes registered');
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('🟢 MongoDB Connected!');

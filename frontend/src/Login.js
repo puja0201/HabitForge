@@ -7,9 +7,16 @@ function Login() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    if (!email || !password) {
+      alert('Email and password enter చేయి!');
+      return;
+    }
+
+    setLoading(true);
     try {
       if (isLogin) {
         const res = await axios.post(
@@ -17,18 +24,35 @@ function Login() {
           { email, password }
         );
         localStorage.setItem('token', res.data.token);
+        localStorage.setItem('name', res.data.name);
         navigate('/dashboard');
       } else {
+        if (!name) {
+          alert('Name enter చేయి!');
+          setLoading(false);
+          return;
+        }
         await axios.post(
           'http://localhost:5000/api/auth/register',
           { name, email, password }
         );
+        alert('Registered successfully! Now login చేయి ✅');
         setIsLogin(true);
-        alert('Registered! Now login.');
+        setName('');
+        setEmail('');
+        setPassword('');
       }
     } catch (err) {
-      alert('Something went wrong!');
+      console.error('Auth error:', err);
+      const msg = err.response?.data?.message || err.message || 'Something went wrong!';
+      alert('❌ ' + msg);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSubmit();
   };
 
   return (
@@ -43,6 +67,7 @@ function Login() {
             placeholder="Your Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         )}
 
@@ -51,6 +76,7 @@ function Login() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
 
         <input
@@ -58,14 +84,20 @@ function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
 
-        <button className="auth-btn" onClick={handleSubmit}>
-          {isLogin ? 'Login' : 'Register'}
+        <button
+          className="auth-btn"
+          onClick={handleSubmit}
+          disabled={loading}
+          style={{ opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? '⏳ Please wait...' : (isLogin ? '⚔️ Login' : '🚀 Register')}
         </button>
 
         <p onClick={() => setIsLogin(!isLogin)} className="switch-text">
-          {isLogin ? "New here? Create Account" : "Already have account? Login"}
+          {isLogin ? "New here? Create Account →" : "Already have account? Login →"}
         </p>
       </div>
     </div>
